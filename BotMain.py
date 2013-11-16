@@ -17,7 +17,7 @@ class Bot:
 	SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	def __init__(self):
-			self.key = Random.new().read(self.BLOCK_SIZE)
+		self.key = Random.new().read(self.BLOCK_SIZE)
 
 
 	def connect(self, server, port):
