@@ -33,17 +33,24 @@ class Bot:
 	def encryptAES(self, message, key):
 		iv = Random.new().read(self.BLOCK_SIZE)
 		cipher = AES.new(key, AES.MODE_CBC, iv)
-		return base64.b64encode(iv + cipher.encrypt(self.pad(message)))
+		ciphertext = base64.b64encode(iv + cipher.encrypt(self.pad(message)))
+		digest = self.get_hmac(ciphertext, key)
+		return str(digest) + str(ciphertext)
 
 
 	def decryptAES(self, ciphertext, key):
+		digest = ciphertext[:16]
+		ciphertext = ciphertext[16:]
+		if str(digest) != str(self.get_hmac(ciphertext,key)):
+			print "MESSAGE TAMPERED"
 		iv = base64.b64decode(ciphertext)[:16]
 		cipher = AES.new(key, AES.MODE_CBC, iv)
 		return cipher.decrypt(base64.b64decode(ciphertext)[16:]).rstrip(self.PADDING)
+					
 
 	def get_hmac(self, message, key):
-		digest = hmac.new(key, message, hashlib.sha256).digest()
-		return base64.b64encode(digest).decode()
+		digest = hmac.new(key, message, hashlib.sha512).digest()
+		return base64.b64encode(digest)[:16]
 
 	def pad(self, message):
 		return message + (self.BLOCK_SIZE - len(message) % self.BLOCK_SIZE) * \
