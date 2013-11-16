@@ -16,36 +16,49 @@ class Bot:
 	PADDING = '\0'
 	SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	def __init__(self, server, ,port):
-			# Connection Information
-			self.server = server
-			self.port = port
+	def __init__(self):
+			self.key = Random.new().read(self.BLOCK_SIZE)
 
 
-	def connect(self, nick, userid):
-		self.SERVER.connect((self.server, self.port))
+	def connect(self, server, port):
+		self.server = str(server)
+		self.port = port
+		try:
+			self.SERVER.connect((self.server, self.port))
+		except:
+			print "[-] Cannot Connect"
+			sys.exit(1)
 
 
-	def encryptAES(self, message, key):
+	def send_message(self, message):
+		self.SERVER.sendall(self.encryptAES(message))
+
+
+	def receive_message(self, message):
+		return self.decryptAES(message)
+
+
+	def encryptAES(self, message):
 		iv = Random.new().read(self.BLOCK_SIZE)
-		cipher = AES.new(key, AES.MODE_CBC, iv)
+		cipher = AES.new(self.key, AES.MODE_CBC, iv)
 		ciphertext = base64.b64encode(iv + cipher.encrypt(self.pad(message)))
-		digest = self.get_hmac(ciphertext, key)
+		digest = self.get_hmac(ciphertext)
 		return str(digest) + str(ciphertext)
 
 
-	def decryptAES(self, ciphertext, key):
+	def decryptAES(self, ciphertext):
 		digest = ciphertext[:16]
 		ciphertext = ciphertext[16:]
-		if str(digest) != str(self.get_hmac(ciphertext,key)):
-			print "MESSAGE TAMPERED"
+		if str(digest) != str(self.get_hmac(ciphertext)):
+			print "[-] MESSAGE TAMPERED"
 		iv = base64.b64decode(ciphertext)[:16]
-		cipher = AES.new(key, AES.MODE_CBC, iv)
+		cipher = AES.new(self.key, AES.MODE_CBC, iv)
 		return cipher.decrypt(base64.b64decode(ciphertext)[16:])\
 		.rstrip(self.PADDING)
 					
 
-	def get_hmac(self, message, key):
+	def get_hmac(self, message):
+		key = hashlib.sha1(self.key).digest()
 		digest = hmac.new(key, message, hashlib.sha512).digest()
 		return base64.b64encode(digest)[:16]
 
