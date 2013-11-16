@@ -1,6 +1,9 @@
 from Crypto.Cipher import AES
+from Crypto import Random
 import subprocess
 import base64
+import hashlib
+import hmac
 import socket
 import urllib
 import time
@@ -28,14 +31,19 @@ class Bot:
 		self.IRC.send('JOIN %s\r\n' % (self.channel))
 
 	def encryptAES(self, message, key):
-		cipher = AES.new(key)
-		return base64.b64encode(cipher.encrypt(self.pad(message)))
+		iv = Random.new().read(self.BLOCK_SIZE)
+		cipher = AES.new(key, AES.MODE_CBC, iv)
+		return base64.b64encode(iv + cipher.encrypt(self.pad(message)))
 
 
 	def decryptAES(self, ciphertext, key):
-		cipher = AES.new(key)
-		return cipher.decrypt(base64.b64decode(ciphertext)).rstrip(self.PADDING)
+		iv = base64.b64decode(ciphertext)[:16]
+		cipher = AES.new(key, AES.MODE_CBC, iv)
+		return cipher.decrypt(base64.b64decode(ciphertext)[16:]).rstrip(self.PADDING)
 
+	def get_hmac(self, message, key):
+		digest = hmac.new(key, message, hashlib.sha256).digest()
+		return base64.b64encode(digest).decode()
 
 	def pad(self, message):
 		return message + (self.BLOCK_SIZE - len(message) % self.BLOCK_SIZE) * \
