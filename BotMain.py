@@ -46,11 +46,8 @@ class Bot:
 			'&position=true').read()
 
 	def get_active_connections(self):
-		cmd = "sudo netstat -alpn | grep :80 | awk '{print $5}' |awk -F: '{print $(NF-1)}' |sort | uniq -c | sort -n"
-		ps =  subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+		cmd = "sudo netstat -alpn | grep :80 | awk '{print $5}' |awk -F: "\
+		"'{print $(NF-1)}' |sort | uniq -c | sort -n"
+		ps =  subprocess.Popen(cmd, stdout=subprocess.PIPE, \
+			stderr=subprocess.STDOUT, shell=True)
 		return ps.communicate()[0]
-
-	def return_values(self):
-		print "Server: %s" % (self.server)
-		print "Channel: %s" % (self.channel)
-		print "Port: %s" % (self.port)
