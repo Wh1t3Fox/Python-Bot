@@ -6,9 +6,7 @@ import hashlib
 import hmac
 import socket
 import urllib
-import time
 import sys
-import os
 
 class Bot:
 
