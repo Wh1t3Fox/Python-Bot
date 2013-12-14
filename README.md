@@ -10,5 +10,4 @@ Python-Bot
 
 
 ####Note
-
-This is intended for educational purposes only!
+**This is intended for educational purposes only!**
